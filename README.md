@@ -29,10 +29,15 @@ deno lint
 deno fmt
 ```
 
-### Generate NPM Package
+### Generate NPM Package & Publish
 
 ```bash
-deno run -A build_npm.ts [version]
+deno run -A build_npm.ts v0.0.1
+git commit -m 'hogehoge'
+git push
+git tag -a v0.0.1 -m 'hogehoge'
+git push origin v0.0.1
+npm publish
 ```
 
 ## LICENSE
