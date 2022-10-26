@@ -3,7 +3,7 @@ const process = require("process");
 const { pathToFileURL } = require("url");
 const { testDefinitions } = require("@deno/shim-deno/test-internals");
 const filePaths = [
-    "src/promise-array.test.js",
+    "src/promise_array_parallel.test.js",
 ];
 async function main() {
     const testContext = {

@@ -1,13 +1,12 @@
-import * as dntShim from "../_dnt.test_shims.js";
 import {
   assert,
   assertEquals,
-} from "../deps/deno.land/std@0.160.0/testing/asserts.js";
+} from "https://deno.land/std@0.160.0/testing/asserts.ts";
 
-import { PromiseArray } from "./promise-array.js";
-import { SeedableRandom, sleep } from "./util.js";
+import { PromiseArray } from "./promise_array_parallel.ts";
+import { SeedableRandom, sleep } from "./util.ts";
 
-dntShim.Deno.test("First come, first served", async () => {
+Deno.test("First come, first served", async () => {
   let parallelSizeX = 0;
   let parallelSizeXMax = 0;
   let parallelSizeY = 0;
@@ -39,7 +38,7 @@ dntShim.Deno.test("First come, first served", async () => {
   assertEquals(t, [...new Array(100)].map((_, i) => 100 + i));
 });
 
-dntShim.Deno.test("First index, first served", async () => {
+Deno.test("First index, first served", async () => {
   let parallelSizeX = 0;
   let parallelSizeXMax = 0;
   let parallelSizeY = 0;

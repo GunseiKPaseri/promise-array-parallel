@@ -1,4 +1,4 @@
-# promise-array
+# promise_array_parallel
 
 ## What does this do?
 

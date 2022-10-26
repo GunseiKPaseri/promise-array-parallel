@@ -1,7 +1,7 @@
 src/
-esm/src/promise-array.test.js
-script/src/promise-array.test.js
-types/src/promise-array.test.d.ts
+esm/src/promise_array_parallel.test.js
+script/src/promise_array_parallel.test.js
+types/src/promise_array_parallel.test.d.ts
 esm/deps/deno.land/std@0.160.0/fmt/colors.js
 script/deps/deno.land/std@0.160.0/fmt/colors.js
 types/deps/deno.land/std@0.160.0/fmt/colors.d.ts

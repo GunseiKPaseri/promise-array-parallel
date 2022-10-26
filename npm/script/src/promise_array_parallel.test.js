@@ -25,7 +25,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const dntShim = __importStar(require("../_dnt.test_shims.js"));
 const asserts_js_1 = require("../deps/deno.land/std@0.160.0/testing/asserts.js");
-const promise_array_js_1 = require("./promise-array.js");
+const promise_array_parallel_js_1 = require("./promise_array_parallel.js");
 const util_js_1 = require("./util.js");
 dntShim.Deno.test("First come, first served", async () => {
     let parallelSizeX = 0;
@@ -35,7 +35,7 @@ dntShim.Deno.test("First come, first served", async () => {
     const r = new util_js_1.SeedableRandom();
     let coming = 0;
     let maxComing = 0;
-    const t = await promise_array_js_1.PromiseArray
+    const t = await promise_array_parallel_js_1.PromiseArray
         .from([...new Array(100)].map((_, i) => i))
         .parallelWork(async () => {
         parallelSizeX++;
@@ -65,7 +65,7 @@ dntShim.Deno.test("First index, first served", async () => {
     let parallelSizeYMax = 0;
     const r = new util_js_1.SeedableRandom();
     let index = 0;
-    const t = await promise_array_js_1.PromiseArray
+    const t = await promise_array_parallel_js_1.PromiseArray
         .from([...new Array(100)].map((_, i) => i))
         .parallelWork(async () => {
         parallelSizeX++;

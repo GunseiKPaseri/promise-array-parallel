@@ -1,6 +1,6 @@
 import * as dntShim from "../_dnt.test_shims.js";
 import { assert, assertEquals, } from "../deps/deno.land/std@0.160.0/testing/asserts.js";
-import { PromiseArray } from "./promise-array.js";
+import { PromiseArray } from "./promise_array_parallel.js";
 import { SeedableRandom, sleep } from "./util.js";
 dntShim.Deno.test("First come, first served", async () => {
     let parallelSizeX = 0;

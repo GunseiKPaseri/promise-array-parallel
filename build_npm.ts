@@ -12,16 +12,16 @@ await build({
   },
   package: {
     // package.json properties
-    name: "promise-array",
+    name: "promise_array_parallel",
     version: Deno.args[0],
     description: "Manage arrays of Promise",
     license: "MIT",
     repository: {
       type: "git",
-      url: "git+https://github.com/GunseiKPaseri/promise-array.git",
+      url: "git+https://github.com/GunseiKPaseri/promise_array_parallel.git",
     },
     bugs: {
-      url: "https://github.com/GunseiKPaseri/promise-array/issues",
+      url: "https://github.com/GunseiKPaseri/promise_array_parallel/issues",
     },
   },
 });
