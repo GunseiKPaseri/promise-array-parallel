@@ -13,7 +13,7 @@ await build({
   package: {
     // package.json properties
     name: "promise_array_parallel",
-    version: Deno.args[0],
+    version: Deno.args[0]?.replace(/^v/g, ""),
     description: "Manage arrays of Promise",
     license: "MIT",
     repository: {
