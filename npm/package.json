@@ -3,7 +3,7 @@
   "main": "./script/mod.js",
   "types": "./types/mod.d.ts",
   "name": "promise_array_parallel",
-  "version": "0.0.1-alpha.2",
+  "version": "0.0.1-alpha.3",
   "description": "Manage arrays of Promise",
   "license": "MIT",
   "repository": {
@@ -13,6 +13,12 @@
   "bugs": {
     "url": "https://github.com/GunseiKPaseri/promise_array_parallel/issues"
   },
+  "keywords": [
+    "promise",
+    "parallel",
+    "semaphore",
+    "async"
+  ],
   "exports": {
     ".": {
       "import": {

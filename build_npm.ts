@@ -23,6 +23,12 @@ await build({
     bugs: {
       url: "https://github.com/GunseiKPaseri/promise_array_parallel/issues",
     },
+    keywords: [
+      'promise',
+      'parallel',
+      'semaphore',
+      'async',
+    ]
   },
 });
 
