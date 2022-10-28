@@ -30,6 +30,7 @@ await build({
       'async',
     ]
   },
+  scriptModule: "umd"
 });
 
 // post build steps

@@ -27,5 +27,10 @@
     "files": {
       "include": ["src/"]
     }
+  },
+  "tasks": {
+    "dnt": "deno run --allow-env --allow-read --allow-write --allow-run --allow-net build_npm.ts $(git describe --tags $(git rev-list --tags --max-count=1))",
+    "test": "deno fmt && deno lint && deno check ./mod.ts && deno test --shuffle",
+    "testcheck": "deno fmt --check && deno lint && deno check ./mod.ts && deno test --shuffle"
   }
 }
