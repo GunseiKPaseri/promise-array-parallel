@@ -1,9 +1,18 @@
-import { sleep } from "./util.js";
+import { generatePromiseResolveList, sleep } from "./util.js";
 
 /**
  * index & value
  */
-type IdxValue<U> = { idx: number; value: U };
+type IdxValue<T> = { idx: number; value: T; rejected: false };
+type RejectableIdxValue<T> = IdxValue<T> | {
+  idx: number;
+  // deno-lint-ignore no-explicit-any
+  reason: any;
+  rejected: true;
+};
+type PromiseIdxValueArray<T extends readonly unknown[]> = {
+  [P in keyof T]: Promise<RejectableIdxValue<T[P]>>;
+};
 
 export type ParallelWorkOptions = {
   parallelDegMax: number;
@@ -14,26 +23,27 @@ export type ParallelWorkOptions = {
 /**
  * promise array object
  */
-export class PromiseArray<T> {
+export class PromiseArray<T extends readonly unknown[]> {
   /**
    * make resolved Promise object
    * @param `array` using array
    * @returns `PromiseArray`
    */
-  static from<U>(array: U[]) {
-    return new PromiseArray(
-      array.map((value, idx) => Promise.resolve({ idx, value })),
+  static from<T extends readonly unknown[]>(array: T): PromiseArray<T> {
+    return new PromiseArray<T>(
+      array.map((value, idx) => Promise.resolve({ idx, value, rejected: false }) // deno-lint-ignore no-explicit-any
+      ) as any,
     );
   }
 
   /**
    * @param `array` promise array
    */
-  constructor(array: Promise<IdxValue<T>>[]) {
+  constructor(array: PromiseIdxValueArray<T>) {
     this.#array = array;
   }
 
-  #array: Promise<IdxValue<T>>[];
+  #array: PromiseIdxValueArray<T>;
 
   /**
    * `Promise[]` raw object
@@ -47,9 +57,39 @@ export class PromiseArray<T> {
    * @returns solved array
    */
   all() {
-    return Promise.all(this.#array).then((x) =>
-      x.sort((a, b) => a.idx - b.idx).map((x) => x.value)
-    );
+    return Promise.all(this.#array)
+      .then((x) =>
+        new Promise((resolve, reject) => {
+          const t = x.map((y) => {
+            if (y.rejected) {
+              reject(y.reason);
+              return;
+            }
+            return y.value;
+          });
+          resolve(t);
+        })
+      );
+  }
+
+  /**
+   * solve like `Promise.allSettled`
+   * @returns solved array
+   */
+  allSettled(): Promise<PromiseSettledResult<T[number]>[]> {
+    return Promise.allSettled(this.#array).then((x) => (
+      x.map((y) =>
+        y.status === "fulfilled" && !y.value.rejected
+          ? {
+            status: "fulfilled" as const,
+            value: y.value.value,
+          }
+          : {
+            status: "rejected" as const,
+            reason: (y.status === "fulfilled" ? y.value.rejected : y.reason),
+          }
+      )
+    ));
   }
 
   /**
@@ -59,9 +99,10 @@ export class PromiseArray<T> {
    * @returns `PromiseArray`
    */
   parallelWork<U>(
-    work: (idxval: IdxValue<T>) => Promise<U>,
+    work: <V extends T[number]>(idxval: IdxValue<V>) => Promise<U>,
     options?: Partial<ParallelWorkOptions>,
   ) {
+    // initialize
     const { parallelDegMax = Infinity, priority = "COME", workIntervalMS = 0 } =
       options ?? {};
 
@@ -70,10 +111,9 @@ export class PromiseArray<T> {
     const iter = priority === "COME" ? this.fcfs() : this.fifs();
 
     // 処理開始を待つタスク
-    const waitingTaskQueue: IdxValue<T>[] = [];
+    const waitingTaskQueue: RejectableIdxValue<T[number]>[] = [];
     // 並列実行中の処理についてのユニークキー
     let workspace: symbol[] = [];
-    let intervalPromise: Promise<void> = Promise.resolve();
 
     // ユニークキーを削除
     const releaceWorkspaceUnique = (uniqueKey: symbol) => {
@@ -82,14 +122,9 @@ export class PromiseArray<T> {
       tryNextTask();
     };
 
-    let i = 0;
-    const resolveList:
-      ((value: IdxValue<U> | PromiseLike<IdxValue<U>>) => void)[] = [];
-    const workPromise = [...new Array(this.#array.length)].map(() =>
-      new Promise<IdxValue<U>>((res) => {
-        resolveList.push(res);
-      })
-    );
+    const { resolveList, promiseList } = generatePromiseResolveList<
+      RejectableIdxValue<U>
+    >(this.#array.length);
 
     // 実行できるならworkを実行
     const tryNextTask = () => {
@@ -99,13 +134,23 @@ export class PromiseArray<T> {
       // ユニークキーを発行、登録
       const workspaceKey = Symbol();
       workspace.push(workspaceKey);
-      Promise.all([intervalPromise, work(nextTask)]).then((result) => {
-        // 次のタスクとのインターバルを設定
-        intervalPromise = sleep(workIntervalMS);
+      const wrappedWork = async (): Promise<RejectableIdxValue<U>> => {
+        if (nextTask.rejected) return nextTask;
+        try {
+          return {
+            idx: nextTask.idx,
+            value: await work(nextTask),
+            rejected: false,
+          };
+        } catch (e) {
+          return { idx: nextTask.idx, reason: e, rejected: true };
+        }
+      };
+      wrappedWork().then((result) => {
         // タスクが完了したらユニークキー登録を解除
         releaceWorkspaceUnique(workspaceKey);
         // 結果を通知
-        resolveList[i++]({ idx: nextTask.idx, value: result[1] });
+        resolveList[nextTask.idx](result);
       });
     };
 
@@ -114,23 +159,21 @@ export class PromiseArray<T> {
       for await (const nextTarget of iter) {
         waitingTaskQueue.push(nextTarget);
         tryNextTask();
+        await sleep(workIntervalMS);
       }
     })();
 
-    return new PromiseArray(workPromise);
+    return new PromiseArray(promiseList);
   }
 
   /**
    * First-Come-First-Served
    */
   async *fcfs() {
-    const resolveList:
-      ((value: IdxValue<T> | PromiseLike<IdxValue<T>>) => void)[] = [];
-    const fcfslize = [...new Array(this.#array.length)].map(() =>
-      new Promise<IdxValue<T>>((res) => {
-        resolveList.push(res);
-      })
-    );
+    const { resolveList, promiseList: fcfslize } = generatePromiseResolveList<
+      RejectableIdxValue<T[number]>
+    >(this.#array.length);
+
     // fcfs resolve
     let i = 0;
     this.#array.map((x) =>
@@ -147,20 +190,17 @@ export class PromiseArray<T> {
    * First-Index-First-Served
    */
   async *fifs() {
-    const resolveList:
-      ((value: IdxValue<T> | PromiseLike<IdxValue<T>>) => void)[] = [];
-    const fcfslize = [...new Array(this.#array.length)].map(() =>
-      new Promise<IdxValue<T>>((res) => {
-        resolveList.push(res);
-      })
-    );
+    const { resolveList, promiseList: fifslize } = generatePromiseResolveList<
+      RejectableIdxValue<T[number]>
+    >(this.#array.length);
+
     // fifs resolve
     this.#array.map((x) =>
       x.then((v) => {
         resolveList[v.idx](v);
       })
     );
-    for await (const x of fcfslize) {
+    for await (const x of fifslize) {
       yield x;
     }
   }

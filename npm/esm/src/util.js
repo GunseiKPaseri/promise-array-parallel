@@ -10,6 +10,11 @@ var __classPrivateFieldGet = (this && this.__classPrivateFieldGet) || function (
     return kind === "m" ? f : kind === "a" ? f.call(receiver) : f ? f.value : state.get(receiver);
 };
 var _SeedableRandom_x, _SeedableRandom_y, _SeedableRandom_z, _SeedableRandom_w;
+/**
+ * gen wait promise
+ * @param ms time
+ * @returns
+ */
 export const sleep = (ms = 0) => new Promise((res) => setTimeout(res, ms));
 /**
  * Seedable random
@@ -52,3 +57,10 @@ export class SeedableRandom {
     }
 }
 _SeedableRandom_x = new WeakMap(), _SeedableRandom_y = new WeakMap(), _SeedableRandom_z = new WeakMap(), _SeedableRandom_w = new WeakMap();
+export const generatePromiseResolveList = (length) => {
+    const resolveList = [];
+    const promiseList = [...new Array(length)].map(() => new Promise((res) => {
+        resolveList.push(res);
+    }));
+    return { resolveList, promiseList };
+};

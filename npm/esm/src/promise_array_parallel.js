@@ -10,7 +10,7 @@ var __classPrivateFieldGet = (this && this.__classPrivateFieldGet) || function (
     return kind === "m" ? f : kind === "a" ? f.call(receiver) : f ? f.value : state.get(receiver);
 };
 var _PromiseArray_array;
-import { sleep } from "./util.js";
+import { generatePromiseResolveList, sleep } from "./util.js";
 /**
  * promise array object
  */
@@ -28,7 +28,8 @@ export class PromiseArray {
      * @returns `PromiseArray`
      */
     static from(array) {
-        return new PromiseArray(array.map((value, idx) => Promise.resolve({ idx, value })));
+        return new PromiseArray(array.map((value, idx) => Promise.resolve({ idx, value, rejected: false }) // deno-lint-ignore no-explicit-any
+        ));
     }
     /**
      * `Promise[]` raw object
@@ -41,7 +42,32 @@ export class PromiseArray {
      * @returns solved array
      */
     all() {
-        return Promise.all(__classPrivateFieldGet(this, _PromiseArray_array, "f")).then((x) => x.sort((a, b) => a.idx - b.idx).map((x) => x.value));
+        return Promise.all(__classPrivateFieldGet(this, _PromiseArray_array, "f"))
+            .then((x) => new Promise((resolve, reject) => {
+            const t = x.map((y) => {
+                if (y.rejected) {
+                    reject(y.reason);
+                    return;
+                }
+                return y.value;
+            });
+            resolve(t);
+        }));
+    }
+    /**
+     * solve like `Promise.allSettled`
+     * @returns solved array
+     */
+    allSettled() {
+        return Promise.allSettled(__classPrivateFieldGet(this, _PromiseArray_array, "f")).then((x) => (x.map((y) => y.status === "fulfilled" && !y.value.rejected
+            ? {
+                status: "fulfilled",
+                value: y.value.value,
+            }
+            : {
+                status: "rejected",
+                reason: (y.status === "fulfilled" ? y.value.rejected : y.reason),
+            })));
     }
     /**
      * Execute works in parallel
@@ -50,6 +76,7 @@ export class PromiseArray {
      * @returns `PromiseArray`
      */
     parallelWork(work, options) {
+        // initialize
         const { parallelDegMax = Infinity, priority = "COME", workIntervalMS = 0 } = options ?? {};
         const chunkSize = Math.max(Math.min(parallelDegMax, __classPrivateFieldGet(this, _PromiseArray_array, "f").length), 1);
         const iter = priority === "COME" ? this.fcfs() : this.fifs();
@@ -57,18 +84,13 @@ export class PromiseArray {
         const waitingTaskQueue = [];
         // 並列実行中の処理についてのユニークキー
         let workspace = [];
-        let intervalPromise = Promise.resolve();
         // ユニークキーを削除
         const releaceWorkspaceUnique = (uniqueKey) => {
             workspace = workspace.filter((key) => key !== uniqueKey);
             //待機中の処理を実行
             tryNextTask();
         };
-        let i = 0;
-        const resolveList = [];
-        const workPromise = [...new Array(__classPrivateFieldGet(this, _PromiseArray_array, "f").length)].map(() => new Promise((res) => {
-            resolveList.push(res);
-        }));
+        const { resolveList, promiseList } = generatePromiseResolveList(__classPrivateFieldGet(this, _PromiseArray_array, "f").length);
         // 実行できるならworkを実行
         const tryNextTask = () => {
             if (workspace.length >= chunkSize)
@@ -79,13 +101,25 @@ export class PromiseArray {
             // ユニークキーを発行、登録
             const workspaceKey = Symbol();
             workspace.push(workspaceKey);
-            Promise.all([intervalPromise, work(nextTask)]).then((result) => {
-                // 次のタスクとのインターバルを設定
-                intervalPromise = sleep(workIntervalMS);
+            const wrappedWork = async () => {
+                if (nextTask.rejected)
+                    return nextTask;
+                try {
+                    return {
+                        idx: nextTask.idx,
+                        value: await work(nextTask),
+                        rejected: false,
+                    };
+                }
+                catch (e) {
+                    return { idx: nextTask.idx, reason: e, rejected: true };
+                }
+            };
+            wrappedWork().then((result) => {
                 // タスクが完了したらユニークキー登録を解除
                 releaceWorkspaceUnique(workspaceKey);
                 // 結果を通知
-                resolveList[i++]({ idx: nextTask.idx, value: result[1] });
+                resolveList[nextTask.idx](result);
             });
         };
         // 順次並列処理に投げる
@@ -93,18 +127,16 @@ export class PromiseArray {
             for await (const nextTarget of iter) {
                 waitingTaskQueue.push(nextTarget);
                 tryNextTask();
+                await sleep(workIntervalMS);
             }
         })();
-        return new PromiseArray(workPromise);
+        return new PromiseArray(promiseList);
     }
     /**
      * First-Come-First-Served
      */
     async *fcfs() {
-        const resolveList = [];
-        const fcfslize = [...new Array(__classPrivateFieldGet(this, _PromiseArray_array, "f").length)].map(() => new Promise((res) => {
-            resolveList.push(res);
-        }));
+        const { resolveList, promiseList: fcfslize } = generatePromiseResolveList(__classPrivateFieldGet(this, _PromiseArray_array, "f").length);
         // fcfs resolve
         let i = 0;
         __classPrivateFieldGet(this, _PromiseArray_array, "f").map((x) => x.then((v) => {
@@ -118,15 +150,12 @@ export class PromiseArray {
      * First-Index-First-Served
      */
     async *fifs() {
-        const resolveList = [];
-        const fcfslize = [...new Array(__classPrivateFieldGet(this, _PromiseArray_array, "f").length)].map(() => new Promise((res) => {
-            resolveList.push(res);
-        }));
+        const { resolveList, promiseList: fifslize } = generatePromiseResolveList(__classPrivateFieldGet(this, _PromiseArray_array, "f").length);
         // fifs resolve
         __classPrivateFieldGet(this, _PromiseArray_array, "f").map((x) => x.then((v) => {
             resolveList[v.idx](v);
         }));
-        for await (const x of fcfslize) {
+        for await (const x of fifslize) {
             yield x;
         }
     }

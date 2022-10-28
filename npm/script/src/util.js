@@ -12,7 +12,12 @@ var __classPrivateFieldGet = (this && this.__classPrivateFieldGet) || function (
 };
 var _SeedableRandom_x, _SeedableRandom_y, _SeedableRandom_z, _SeedableRandom_w;
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.SeedableRandom = exports.sleep = void 0;
+exports.generatePromiseResolveList = exports.SeedableRandom = exports.sleep = void 0;
+/**
+ * gen wait promise
+ * @param ms time
+ * @returns
+ */
 const sleep = (ms = 0) => new Promise((res) => setTimeout(res, ms));
 exports.sleep = sleep;
 /**
@@ -57,3 +62,11 @@ class SeedableRandom {
 }
 exports.SeedableRandom = SeedableRandom;
 _SeedableRandom_x = new WeakMap(), _SeedableRandom_y = new WeakMap(), _SeedableRandom_z = new WeakMap(), _SeedableRandom_w = new WeakMap();
+const generatePromiseResolveList = (length) => {
+    const resolveList = [];
+    const promiseList = [...new Array(length)].map(() => new Promise((res) => {
+        resolveList.push(res);
+    }));
+    return { resolveList, promiseList };
+};
+exports.generatePromiseResolveList = generatePromiseResolveList;

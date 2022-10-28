@@ -26,12 +26,6 @@ See promise-array.test.ts
 
 This package is developed in Deno; it is recommended to install Deno.
 
-### Test
-
-```bash
-deno test
-```
-
 ### Lint / Format
 
 ```bash
@@ -39,14 +33,21 @@ deno lint
 deno fmt
 ```
 
+### Test
+
+```bash
+deno check ./mod.ts
+deno test
+```
+
 ### Generate NPM Package & Publish
 
 ```bash
-deno run -A build_npm.ts v0.0.1
+deno run -A build_npm.ts 0.0.1
+git add ./npm
 git commit -m 'hogehoge'
 git push
-git tag -a v0.0.1 -m 'hogehoge'
-git push origin v0.0.1
+git tag -a 0.0.1 -m 'hogehoge'
+git push origin 0.0.1
 npm publish
 ```
-

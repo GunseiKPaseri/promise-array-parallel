@@ -2,6 +2,7 @@ import * as dntShim from "../_dnt.test_shims.js";
 import {
   assert,
   assertEquals,
+  assertRejects,
 } from "../deps/deno.land/std@0.160.0/testing/asserts.js";
 
 import { PromiseArray } from "./promise_array_parallel.js";
@@ -20,7 +21,7 @@ dntShim.Deno.test("First come, first served", async () => {
     .parallelWork(async () => {
       parallelSizeX++;
       parallelSizeXMax = Math.max(parallelSizeXMax, parallelSizeX);
-      await sleep(r.int(30, 1000));
+      await sleep(r.int(10, 200));
       parallelSizeX--;
       return coming++;
     }, { parallelDegMax: 20 })
@@ -29,7 +30,7 @@ dntShim.Deno.test("First come, first served", async () => {
       maxComing++;
       parallelSizeY++;
       parallelSizeYMax = Math.max(parallelSizeYMax, parallelSizeY);
-      await sleep(r.int(30, 1000));
+      await sleep(r.int(10, 200));
       parallelSizeY--;
       return idx + 100;
     }, { parallelDegMax: 10, priority: "COME" })
@@ -51,7 +52,7 @@ dntShim.Deno.test("First index, first served", async () => {
     .parallelWork(async () => {
       parallelSizeX++;
       parallelSizeXMax = Math.max(parallelSizeXMax, parallelSizeX);
-      await sleep(r.int(30, 1000));
+      await sleep(r.int(10, 200));
       parallelSizeX--;
     }, { parallelDegMax: 20 })
     .parallelWork(async ({ idx }) => {
@@ -59,7 +60,7 @@ dntShim.Deno.test("First index, first served", async () => {
       index++;
       parallelSizeY++;
       parallelSizeYMax = Math.max(parallelSizeYMax, parallelSizeY);
-      await sleep(r.int(30, 1000));
+      await sleep(r.int(10, 200));
       parallelSizeY--;
       return idx + 100;
     }, { parallelDegMax: 10, priority: "INDEX" })
@@ -67,4 +68,84 @@ dntShim.Deno.test("First index, first served", async () => {
   assert(parallelSizeX <= 20);
   assert(parallelSizeY <= 10);
   assertEquals(t, [...new Array(100)].map((_, i) => 100 + i));
+});
+
+dntShim.Deno.test("Rejected, all() throw error", async () => {
+  const r = new SeedableRandom();
+  const x = PromiseArray
+    .from([...new Array(100)].map((_, i) => i))
+    .parallelWork(async ({ idx }) => {
+      if (idx === 50) throw new Error("SOMETHING ERROR!");
+      await sleep(r.int(30, 100));
+    }, { parallelDegMax: 20 })
+    .parallelWork(async ({ idx }) => {
+      await sleep(r.int(30, 100));
+      return idx + 100;
+    }, { parallelDegMax: 10, priority: "INDEX" });
+  await assertRejects(() => x.all(), Error, "SOMETHING ERROR!");
+});
+
+dntShim.Deno.test("Rejected, allSettled not throw error", async () => {
+  const r = new SeedableRandom();
+  const x = PromiseArray
+    .from([...new Array(100)].map((_, i) => i))
+    .parallelWork(async ({ idx }) => {
+      if (idx === 50) throw new Error("SOMETHING ERROR!");
+      await sleep(r.int(30, 100));
+    }, { parallelDegMax: 20 })
+    .parallelWork(async ({ idx }) => {
+      await sleep(r.int(30, 100));
+      return idx + 100;
+    }, { parallelDegMax: 10, priority: "INDEX" });
+  const allSettled = await x.allSettled().catch((reason) => {
+    console.log(reason);
+    return [];
+  });
+  assertEquals(
+    allSettled,
+    [...new Array(100)]
+      .map<PromiseSettledResult<number>>((_, i) => (
+        i === 50
+          ? {
+            status: "rejected",
+            reason: "reason" in allSettled[50] ? allSettled[50].reason : null,
+          }
+          : { status: "fulfilled", value: 100 + i }
+      )),
+  );
+});
+
+dntShim.Deno.test("maintain sequence", async () => {
+  const r = new SeedableRandom();
+  const x = await PromiseArray
+    .from([...new Array(100)].map((_, i) => i))
+    .parallelWork(async ({ value, idx }) => {
+      await sleep(r.int(30, 100));
+      return value + idx;
+    }, { parallelDegMax: 20, priority: "COME" })
+    .parallelWork(async ({ value, idx }) => {
+      await sleep(r.int(30, 100));
+      return value + idx;
+    }, { parallelDegMax: 10, priority: "INDEX" })
+    .parallelWork(async ({ value, idx }) => {
+      await sleep(r.int(30, 100));
+      return value + idx;
+    }, { parallelDegMax: 20, priority: "COME" })
+    .parallelWork(async ({ value, idx }) => {
+      await sleep(r.int(30, 100));
+      return value + idx;
+    }, { parallelDegMax: 10, priority: "COME" })
+    .parallelWork(async ({ value, idx }) => {
+      await sleep(r.int(30, 100));
+      return value + idx;
+    }, { parallelDegMax: 10, priority: "INDEX" })
+    .parallelWork(async ({ value, idx }) => {
+      await sleep(r.int(30, 100));
+      return value + idx;
+    }, { parallelDegMax: 10, priority: "INDEX" })
+    .all();
+  assertEquals(
+    x,
+    [...new Array(100)].map((_, i) => i * 7),
+  );
 });

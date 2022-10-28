@@ -1,4 +1,3 @@
-import { _createWalkEntry } from "https://deno.land/std@0.143.0/fs/walk.ts";
 import {
   assert,
   assertEquals,

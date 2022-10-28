@@ -29,11 +29,10 @@ export class PromiseArray<T extends readonly unknown[]> {
    * @param `array` using array
    * @returns `PromiseArray`
    */
-  static from<T extends readonly unknown[]>(array: T) {
+  static from<T extends readonly unknown[]>(array: T): PromiseArray<T> {
     return new PromiseArray<T>(
-      array.map((value, idx) =>
-        Promise.resolve({ idx, value })
-      ) as PromiseIdxValueArray<T>,
+      array.map((value, idx) => Promise.resolve({ idx, value, rejected: false }) // deno-lint-ignore no-explicit-any
+      ) as any,
     );
   }
 
