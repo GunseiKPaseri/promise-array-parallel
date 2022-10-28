@@ -21,7 +21,7 @@ jobs:
           node-version: ${{ matrix.node-version }}
       - uses: denoland/setup-deno@v1
         with:
-          deno-version: v1.x
-      - name: Run dnt & minify
+          deno-version: v1.26.x
+      - name: Run dnt
         run: |
           deno task dnt
