@@ -29,6 +29,7 @@ This package is developed in Deno; it is recommended to install Deno.
 ### Test
 
 ```bash
+deno check ./mod.ts
 deno test
 ```
 
@@ -49,4 +50,3 @@ git tag -a v0.0.1 -m 'hogehoge'
 git push origin v0.0.1
 npm publish
 ```
-

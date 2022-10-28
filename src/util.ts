@@ -1,3 +1,8 @@
+/**
+ * gen wait promise
+ * @param ms time
+ * @returns
+ */
 export const sleep = (ms = 0) =>
   new Promise<void>((res) => setTimeout(res, ms));
 
@@ -42,3 +47,13 @@ export class SeedableRandom {
     return l + this.rnd() % (u - l);
   }
 }
+
+export const generatePromiseResolveList = <T>(length: number) => {
+  const resolveList: ((value: T | PromiseLike<T>) => void)[] = [];
+  const promiseList = [...new Array(length)].map(() =>
+    new Promise<T>((res) => {
+      resolveList.push(res);
+    })
+  );
+  return { resolveList, promiseList };
+};
