@@ -16,7 +16,13 @@ jobs:
       - uses: denoland/setup-deno@v1
         with:
           deno-version: v1.x
-      - name: Run dnt & minify
+      - name: Run eggs
+        run: |
+          deno install -A --unstable https://x.nest.land/eggs@0.3.10/eggs.ts
+          deno task egg
+          eggs link ${{ secrets.NEST_API_KEY }}
+          eggs publish --yes
+      - name: Run dnt
         run: |
           deno task dnt
       - working-directory: ./npm
