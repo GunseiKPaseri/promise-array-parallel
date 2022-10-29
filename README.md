@@ -25,6 +25,57 @@ There are no dependent packages, so it can be used in both Deno & npm environmen
 
 See [./src/promise_array_parallel.test.ts](./src/promise_array_parallel.test.ts)
 
+### Node
+
+```bash
+npm install promise_array_parallel
+```
+
+make `example.js`
+
+```js
+const PromiseArray = require('promise_array_parallel').PromiseArray
+
+const sleep = (ms = 0) =>
+  new Promise((res) => setTimeout(res, ms));
+
+PromiseArray
+    .from([...new Array(40)].map((_, i) => i < 20 ? 20 - i : i - 20))
+    .parallelWork(async({idx, value}) => {
+        await sleep(value * 10)
+        console.log(idx)
+    })
+    .parallelWork(async({idx}) => {
+        console.log("    " + idx)
+    }, { priority: "INDEX" })
+    
+```
+
+```bash
+node ./example.js
+```
+
+### Deno
+
+```ts
+import {PromiseArray} from 'https://deno.land/x/promise_array_parallel/mod.ts'
+
+const sleep = (ms = 0) =>
+  new Promise((res) => setTimeout(res, ms));
+
+
+PromiseArray
+    .from([...new Array(40)].map((_, i) => i < 20 ? 20 - i : i - 20))
+    .parallelWork(async({idx, value}) => {
+        await sleep(value * 10)
+        console.log(idx)
+    })
+    .parallelWork(async({idx}) => {
+        console.log("    " + idx)
+    }, { priority: "INDEX" })
+    
+```
+
 ## Develop This package
 
 This package is developed in Deno; it is recommended to install Deno.
