@@ -9,13 +9,12 @@ const result = {
   "version": Deno.args[0]?.replace(/^v/g, ""),
   "files": [
     "./**/*.ts",
-    "./**/*.js",
     "README.md"
   ],
   "ignore": [
-    ".github",
-    ".vscode",
-    "npm",
+    ".github/**/*",
+    ".vscode/**/*",
+    "npm/**/*",
     "scripts",
     "examples"
   ],
