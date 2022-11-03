@@ -148,3 +148,36 @@ Deno.test("maintain sequence", async () => {
     [...new Array(100)].map((_, i) => i * 7),
   );
 });
+
+Deno.test("IntervalTime", async () => {
+  const r = new SeedableRandom();
+  const startTimeA: number[] = [];
+  const startTimeB: number[] = [];
+  const startTimeC: number[] = [];
+  await PromiseArray
+    .from([...new Array(100)].map((_, i) => i))
+    .parallelWork(async ({ value, idx }) => {
+      startTimeA.push(performance.now());
+      await sleep(r.int(30, 100));
+      return value + idx;
+    }, { parallelDegMax: 20, priority: "COME", workIntervalMS: 20 })
+    .parallelWork(async ({ value, idx }) => {
+      startTimeB.push(performance.now());
+      await sleep(r.int(2, 15));
+      return value + idx;
+    }, { parallelDegMax: 20, priority: "COME", workIntervalMS: 20 })
+    .parallelWork(async ({ value, idx }) => {
+      startTimeC.push(performance.now());
+      await sleep(r.int(30, 100));
+      return value + idx;
+    }, { parallelDegMax: 20, priority: "INDEX", workIntervalMS: 20 })
+    .all();
+  const timeIntervalMin = Math.min(
+    ...[startTimeA, startTimeB, startTimeC].map((startTime) => (
+      startTime
+        .map((v, i) => (i === 0 ? Infinity : v - startTime[i - 1]))
+        .reduce((prev, cur) => Math.min(prev, cur), Infinity)
+    )),
+  );
+  assert(timeIntervalMin >= 20);
+});
