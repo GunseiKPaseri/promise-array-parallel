@@ -8,8 +8,13 @@ await build({
   entryPoints: ["./mod.ts"],
   outDir: "./npm",
   shims: {
-    // see JS docs for overview and more options
     deno: true,
+    customDev: [{
+      package: {
+        name: "perf_hooks"
+      },
+      globalNames: ["performance"]
+    }]
   },
   package: {
     // package.json properties

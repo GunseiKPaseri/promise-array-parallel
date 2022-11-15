@@ -1,4 +1,4 @@
-name: Deno Test
+name: Text Deno 1.26～1.28
 
 on:
   push:
