@@ -12,11 +12,15 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [16.x, 18.x, 19.x]
+        node-version:
+          - 16.x # End 2023.09.11
+          - 18.x # End 2025.04.30
+          - 19.x # End 2023.06.01
 
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node-version }}
       - uses: denoland/setup-deno@v1
