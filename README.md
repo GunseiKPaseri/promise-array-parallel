@@ -4,6 +4,7 @@
 [![Created by GunseiKPaseri](https://img.shields.io/badge/created%20by-@GunseiKPaseri-00ACEE.svg)](https://twitter.com/GunseiKPaseri)
 ![GitHub issues](https://img.shields.io/github/issues/GunseiKPaseri/promise_array_parallel)
 ![GitHub last commit](https://img.shields.io/github/last-commit/GunseiKPaseri/promise_array_parallel)
+[![CodeFactor](https://www.codefactor.io/repository/github/gunseikpaseri/promise_array_parallel/badge)](https://www.codefactor.io/repository/github/gunseikpaseri/promise_array_parallel)
 
 ![denoland/deno](https://img.shields.io/badge/Deno-v1.26.x-informational?logo=deno)
 ![denoland/deno](https://img.shields.io/badge/Deno-v1.27.x-informational?logo=deno)
@@ -12,7 +13,6 @@
 ![node.js](https://img.shields.io/badge/Node.js-16.x-informational?logo=node.js)
 ![node.js](https://img.shields.io/badge/Node.js-18.x-informational?logo=node.js)
 ![node.js](https://img.shields.io/badge/Node.js-19.x-informational?logo=node.js)
-
 
 - Manage `Promise[]`.
   - Parallel execution of async function

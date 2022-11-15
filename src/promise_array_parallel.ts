@@ -6,8 +6,7 @@ import { generatePromiseResolveList, sleep } from "./util.ts";
 type IdxValue<T> = { idx: number; value: T; rejected: false };
 type RejectableIdxValue<T> = IdxValue<T> | {
   idx: number;
-  // deno-lint-ignore no-explicit-any
-  reason: any;
+  reason: unknown;
   rejected: true;
 };
 type PromiseIdxValueArray<T extends readonly unknown[]> = {
