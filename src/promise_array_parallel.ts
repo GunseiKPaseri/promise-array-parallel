@@ -111,12 +111,12 @@ export class PromiseArray<T extends readonly unknown[]> {
 
     // 処理開始を待つタスク
     const waitingTaskQueue: RejectableIdxValue<T[number]>[] = [];
-    // 並列実行中の処理についてのユニークキー
-    let workspace: symbol[] = [];
+    // 並列実行中の処理についてのユニークキー・利用可能になるまでのpromise
+    let workspace: [symbol, Promise<void>][] = [];
 
     // ユニークキーを削除
     const releaceWorkspaceUnique = (uniqueKey: symbol) => {
-      workspace = workspace.filter((key) => key !== uniqueKey);
+      workspace = workspace.filter((key) => key[0] !== uniqueKey);
       //待機中の処理を実行
       tryNextTask();
     };
@@ -125,6 +125,7 @@ export class PromiseArray<T extends readonly unknown[]> {
       RejectableIdxValue<U>
     >(this.#array.length);
 
+    let nextUsable = Promise.resolve();
     // 実行できるならworkを実行
     const tryNextTask = () => {
       if (workspace.length >= chunkSize) return;
@@ -132,9 +133,13 @@ export class PromiseArray<T extends readonly unknown[]> {
       if (!nextTask) return;
       // ユニークキーを発行、登録
       const workspaceKey = Symbol();
-      workspace.push(workspaceKey);
+      const usable = nextUsable;
+      workspace.push([workspaceKey, usable]);
+      nextUsable = nextUsable.then(() => sleep(workIntervalMS));
+
       const wrappedWork = async (): Promise<RejectableIdxValue<U>> => {
         if (nextTask.rejected) return nextTask;
+        await usable;
         try {
           return {
             idx: nextTask.idx,
@@ -158,7 +163,6 @@ export class PromiseArray<T extends readonly unknown[]> {
       for await (const nextTarget of iter) {
         waitingTaskQueue.push(nextTarget);
         tryNextTask();
-        await sleep(workIntervalMS);
       }
     })();
 
