@@ -180,7 +180,7 @@ Deno.test("IntervalTime", async () => {
     )),
   );
   assert(
-    timeIntervalMin >= 20,
-    `MUST timeIntervalMin(${timeIntervalMin}) >= 20`,
+    timeIntervalMin + 1 >= 20,
+    `MUST timeIntervalMin(${timeIntervalMin}) + 1 >= 20`,
   );
 });
