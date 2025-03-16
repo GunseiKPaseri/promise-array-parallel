@@ -7,16 +7,20 @@
  * @returns {Promise<void>} A Promise that resolves after the specified delay.
  *
  * @example
+ * ```ts
  * // Pause execution for 1 second
  * await sleep(1000);
+ * ```
  *
  * @example
+ * ```ts
  * // Use in an async function to create delays
  * async function demo() {
  *   console.log('Start');
  *   await sleep(2000); // Wait for 2 seconds
  *   console.log('After 2 seconds');
  * }
+ * ```
  */
 export const sleep = (ms = 0) =>
   new Promise<void>((res) => setTimeout(res, ms));
@@ -68,8 +72,10 @@ export class SeedableRandom {
    * @throws {Error} If the lower bound is greater than or equal to the upper bound.
    *
    * @example
+   * ```ts
    * const random = new SeedableRandom(12345);
    * const value = random.int(1, 100); // Random integer between 1 and 99
+   * ```
    */
   int(l: number, u: number) {
     if (u - l <= 0) throw new Error(`l(${l}) should be smaller than u(${u})`);
@@ -87,6 +93,7 @@ export class SeedableRandom {
  *   - promiseList: Array of unresolved Promises that will be resolved when the corresponding resolve function is called
  *
  * @example
+ * ```ts
  * // Generate 3 unresolved Promises
  * const { resolveList, promiseList } = generatePromiseResolveList<string>(3);
  *
@@ -97,6 +104,7 @@ export class SeedableRandom {
  * Promise.all(promiseList).then(values => {
  *   console.log(values); // Will log once all Promises are resolved
  * });
+ * ```
  */
 export const generatePromiseResolveList = <T>(length: number) => {
   const resolveList: ((value: T | PromiseLike<T>) => void)[] = [];
