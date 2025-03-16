@@ -23,7 +23,7 @@
     "include": ["src/"]
   },
   "tasks": {
-    "test": "deno fmt && deno lint && deno check ./mod.ts && deno test --shuffle --parallel",
+    "test": "deno fmt && deno lint && deno check ./mod.ts && deno test --shuffle --parallel --coverage=coverage",
     "testcheck": "deno fmt --check && deno lint && deno check ./mod.ts && deno test --shuffle --parallel"
   }
 }
