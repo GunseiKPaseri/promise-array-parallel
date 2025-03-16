@@ -12,21 +12,15 @@
     ]
   },
   "fmt": {
-    "files": {
-      "include": ["src/"]
-    },
-    "options": {
-      "useTabs": false,
-      "lineWidth": 80,
-      "indentWidth": 2,
-      "singleQuote": false,
-      "proseWrap": "preserve"
-    }
+    "include": ["src/"],
+    "useTabs": false,
+    "lineWidth": 80,
+    "indentWidth": 2,
+    "singleQuote": false,
+    "proseWrap": "preserve"
   },
   "test": {
-    "files": {
-      "include": ["src/"]
-    }
+    "include": ["src/"]
   },
   "tasks": {
     "test": "deno fmt && deno lint && deno check ./mod.ts && deno test --shuffle --parallel",
