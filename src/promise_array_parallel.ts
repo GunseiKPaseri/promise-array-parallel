@@ -47,7 +47,7 @@ export class PromiseArray<T extends readonly unknown[]> {
   /**
    * `Promise[]` raw object
    */
-  get raw() {
+  get raw(): PromiseIdxValueArray<T> {
     return Object.freeze(this.#array);
   }
 
@@ -55,7 +55,7 @@ export class PromiseArray<T extends readonly unknown[]> {
    * solve like `Promise.all`
    * @returns solved array
    */
-  all() {
+  all(): Promise<T> {
     return Promise.all(this.#array)
       .then((x) =>
         new Promise((resolve, reject) => {
@@ -66,7 +66,8 @@ export class PromiseArray<T extends readonly unknown[]> {
             }
             return y.value;
           });
-          resolve(t);
+          // deno-lint-ignore no-explicit-any
+          resolve(t as any as T);
         })
       );
   }
@@ -100,7 +101,7 @@ export class PromiseArray<T extends readonly unknown[]> {
   parallelWork<U>(
     work: <V extends T[number]>(idxval: IdxValue<V>) => Promise<U>,
     options?: Partial<ParallelWorkOptions>,
-  ) {
+  ): PromiseArray<U[]> {
     // initialize
     const { parallelDegMax = Infinity, priority = "COME", workIntervalMS = 0 } =
       options ?? {};
@@ -172,7 +173,7 @@ export class PromiseArray<T extends readonly unknown[]> {
   /**
    * First-Come-First-Served
    */
-  async *fcfs() {
+  async *fcfs(): AsyncGenerator<RejectableIdxValue<T[number]>, void, void> {
     const { resolveList, promiseList: fcfslize } = generatePromiseResolveList<
       RejectableIdxValue<T[number]>
     >(this.#array.length);
@@ -192,7 +193,7 @@ export class PromiseArray<T extends readonly unknown[]> {
   /**
    * First-Index-First-Served
    */
-  async *fifs() {
+  async *fifs(): AsyncGenerator<RejectableIdxValue<T[number]>, void, void> {
     const { resolveList, promiseList: fifslize } = generatePromiseResolveList<
       RejectableIdxValue<T[number]>
     >(this.#array.length);

@@ -1,8 +1,4 @@
-import {
-  assert,
-  assertEquals,
-  assertRejects,
-} from "https://deno.land/std@0.160.0/testing/asserts.ts";
+import { assert, assertEquals, assertRejects } from "jsr:@std/assert@1.0.11";
 
 import { PromiseArray } from "./promise_array_parallel.ts";
 import { SeedableRandom, sleep } from "./util.ts";

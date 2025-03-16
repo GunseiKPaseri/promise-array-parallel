@@ -1,15 +1,15 @@
 {
-  "compilerOptions": {
-    "allowJs": false,
-    "strict": true
-  },
-  "lint": {
-    "files": {
-      "include": ["src/"]
-    },
-    "rules": {
-      "tags": ["recommended"]
-    }
+  "name": "@gunseikpaseri/promise-array-parallel",
+  "version": "0.0.0",
+  "exports": "./mod.ts",
+  "publish": {
+    "include": [
+      "deno.jsonc",
+      "mod.ts",
+      "README.md",
+      "src/",
+      "!src/**/*.test.ts"
+    ]
   },
   "fmt": {
     "files": {
@@ -29,8 +29,6 @@
     }
   },
   "tasks": {
-    "dnt": "deno run --allow-env --allow-read --allow-write --allow-run --allow-net ./scripts/build_npm.ts $(git describe --tags $(git rev-list --tags --max-count=1))",
-    "egg": "deno run ./scripts/gen_eggjson.ts $(git describe --tags $(git rev-list --tags --max-count=1)) > ./egg.json",
     "test": "deno fmt && deno lint && deno check ./mod.ts && deno test --shuffle --parallel",
     "testcheck": "deno fmt --check && deno lint && deno check ./mod.ts && deno test --shuffle --parallel"
   }

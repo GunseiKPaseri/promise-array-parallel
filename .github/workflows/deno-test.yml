@@ -1,0 +1,27 @@
+name: check
+
+env:
+  DENO_VERSION: 2.x
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: ${{ env.DENO_VERSION }}
+      - name: Run fmt
+        run: |
+          deno fmt --check
+      - name: Run lint
+        run: |
+          deno lint
+      - name: Check mod.ts
+        run: |
+          deno check mod.ts
+      - name: Run tests
+        run: |
+          deno test --shuffle --parallel
