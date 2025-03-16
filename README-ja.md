@@ -19,15 +19,10 @@ PromiseArrayParallelは、`Promise.all()`や`.map()`の操作感で非同期タ�
 
 ## インストール
 
-### npm
-
 ```bash
+# npm
 npx jsr add @gunseikpaseri/promise-array-parallel
-```
-
-### Deno
-
-```bash
+# deno
 deno add jsr:@gunseikpaseri/promise-array-parallel
 ```
 
@@ -36,7 +31,7 @@ deno add jsr:@gunseikpaseri/promise-array-parallel
 ### 基本的な使い方
 
 ```typescript
-import { PromiseArray } from "./promise-array-parallel.ts";
+import { PromiseArray } from "@gunseikpaseri/promise-array-parallel";
 
 // 配列からPromiseArrayインスタンスを作成
 const result = await PromiseArray

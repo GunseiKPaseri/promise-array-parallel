@@ -19,15 +19,10 @@
 
 ## Installation
 
-### npm
-
 ```bash
+# npm
 npx jsr add @gunseikpaseri/promise-array-parallel
-```
-
-### Deno
-
-```bash
+# deno
 deno add jsr:@gunseikpaseri/promise-array-parallel
 ```
 
@@ -36,7 +31,7 @@ deno add jsr:@gunseikpaseri/promise-array-parallel
 ### Basic Usage
 
 ```typescript
-import { PromiseArray } from "./promise-array-parallel.ts";
+import { PromiseArray } from "@gunseikpaseri/promise-array-parallel";
 
 // Create a PromiseArray instance from an array
 const result = await PromiseArray
