@@ -1,31 +1,27 @@
-name: Publish
+name: jsr
+
+env:
+  DENO_VERSION: 2.x
 
 on:
-  release:
-    types: [created]
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+  id-token: write
 
 jobs:
   publish:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
+      - uses: actions/checkout@v4
         with:
-          node-version: v18.x
-          registry-url: https://registry.npmjs.org/
-      - uses: denoland/setup-deno@v1
+          fetch-depth: 0
+      - uses: denoland/setup-deno@v2
         with:
-          deno-version: v1.x
-      - name: Run eggs
+          deno-version: ${{ env.DENO_VERSION }}
+      - name: Publish
         run: |
-          deno install -A --unstable https://x.nest.land/eggs@0.3.10/eggs.ts
-          deno task egg
-          eggs link ${{ secrets.NEST_API_KEY }}
-          eggs publish --yes
-      - name: Run dnt
-        run: |
-          deno task dnt
-      - working-directory: ./npm
-        run: npm publish
-        env:
-          NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
+          deno run -A jsr:@david/publish-on-tag@0.2.0
