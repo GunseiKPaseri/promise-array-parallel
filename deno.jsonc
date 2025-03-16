@@ -1,6 +1,6 @@
 {
   "name": "@gunseikpaseri/promise-array-parallel",
-  "version": "0.0.1-alpha.9",
+  "version": "0.0.1",
   "exports": "./mod.ts",
   "publish": {
     "include": [
