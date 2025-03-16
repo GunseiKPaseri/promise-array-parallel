@@ -9,7 +9,7 @@
 
 ## Language Support
 - [English](/README.md)
-- [日本語](/README-ja.md)
+- 日本語
 
 ## 概要
 
@@ -217,5 +217,3 @@ const result = await PromiseArray
   }, { maxExecutionSlots: 20, executionIntervalMS: 20 }) // タスク開始間に20msのインターバル
   .all();
 ```
-
-
