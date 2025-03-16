@@ -1,12 +1,14 @@
 {
   "name": "@gunseikpaseri/promise-array-parallel",
-  "version": "0.0.1-alpha.8",
+  "version": "0.0.1-alpha.9",
   "exports": "./mod.ts",
   "publish": {
     "include": [
       "deno.jsonc",
       "mod.ts",
+      "LICENSE",
       "README.md",
+      "README-ja.md",
       "src/",
       "!src/**/*.test.ts"
     ]
