@@ -104,6 +104,22 @@ gantt
     section Object 3
     Task A(3): crit, a3, 00:00:00, 3s
     Task B(3): active, b3, after a3, 1s
+    
+    section Object 4
+    Task A(4): crit, a4, after a1, 1s
+    Task B(4): active, b4, after a4, 6s
+    
+    section Object 5
+    Task A(5): crit, a5, after a3, 3s
+    Task B(5): active, b5, after a5, 2s
+    
+    section Object 6
+    Task A(6): crit, a6, after a4, 4s
+    Task B(6): active, b6, after a6, 1s
+    
+    section Object 7
+    Task A(7): crit, a7, after a5, 2s
+    Task B(7): active, b7, after a7, 2s
 ```
 
 #### Index Order (`INDEX`)
@@ -140,6 +156,22 @@ gantt
     section Object 3
     Task A(3): crit, a3_i, 00:00:00, 3s
     Task B(3): active, b3_i, after a2_i, 1s
+    
+    section Object 4
+    Task A(4): crit, a4_i, after a1_i, 1s
+    Task B(4): active, b4_i, after b3_i, 6s
+    
+    section Object 5
+    Task A(5): crit, a5_i, after a3_i, 3s
+    Task B(5): active, b5_i, after a5_i, 2s
+    
+    section Object 6
+    Task A(6): crit, a6_i, after a4_i, 4s
+    Task B(6): active, b6_i, after a6_i, 1s
+    
+    section Object 7
+    Task A(7): crit, a7_i, after a5_i, 2s
+    Task B(7): active, b7_i, after b6_i, 2s
 ```
 
 ### Error Handling
