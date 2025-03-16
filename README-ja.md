@@ -1,11 +1,6 @@
 # promise-array-parallel
 
-[![JSR](https://jsr.io/badges/@gunseikpaseri/promise-array-parallel)](https://jsr.io/@gunseikpaseri/promise-array-parallel)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Created by GunseiKPaseri](https://img.shields.io/badge/created%20by-@GunseiKPaseri-00ACEE.svg)](https://twitter.com/GunseiKPaseri)
-![GitHub issues](https://img.shields.io/github/issues/GunseiKPaseri/promise_array_parallel)
-![GitHub last commit](https://img.shields.io/github/last-commit/GunseiKPaseri/promise_array_parallel)
-[![CodeFactor](https://www.codefactor.io/repository/github/gunseikpaseri/promise_array_parallel/badge)](https://www.codefactor.io/repository/github/gunseikpaseri/promise_array_parallel)
+[![JSR](https://jsr.io/badges/@gunseikpaseri/promise-array-parallel)](https://jsr.io/@gunseikpaseri/promise-array-parallel) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) [![Created by GunseiKPaseri](https://img.shields.io/badge/created%20by-@GunseiKPaseri-00ACEE.svg)](https://twitter.com/GunseiKPaseri) ![GitHub issues](https://img.shields.io/github/issues/GunseiKPaseri/promise-array-parallel) ![GitHub last commit](https://img.shields.io/github/last-commit/GunseiKPaseri/promise-array-parallel) [![CodeFactor](https://www.codefactor.io/repository/github/gunseikpaseri/promise-array-parallel/badge)](https://www.codefactor.io/repository/github/gunseikpaseri/promise-array-parallel)
 
 ## Language Support
 - [English](/README.md)
@@ -41,7 +36,7 @@ deno add jsr:@gunseikpaseri/promise-array-parallel
 ### 基本的な使い方
 
 ```typescript
-import { PromiseArray } from "./promise_array_parallel.ts";
+import { PromiseArray } from "./promise-array-parallel.ts";
 
 // 配列からPromiseArrayインスタンスを作成
 const result = await PromiseArray
