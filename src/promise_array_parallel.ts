@@ -9,7 +9,7 @@ export type IdxValue<T> = {
   idx: number;
   /** The value of the array element */
   value: T;
-  rejected: false
+  rejected: false;
 };
 
 /**
@@ -20,7 +20,7 @@ export type RejectedIdxValue = {
   idx: number;
   /** The rejection reason for the array element */
   reason: unknown;
-  rejected: true
+  rejected: true;
 };
 
 /**
