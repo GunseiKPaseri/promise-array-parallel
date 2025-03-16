@@ -26,11 +26,11 @@ const sleep = (ms = 0) => new Promise((res) => setTimeout(res, ms));
 
 PromiseArray
   .from([...new Array(40)].map((_, i) => i < 20 ? 20 - i : i - 20))
-  .parallelWork(async ({ idx, value }) => {
+  .asyncMap(async ({ idx, value }) => {
     await sleep(value * 10);
     console.log(idx);
   })
-  .parallelWork(async ({ idx }) => {
+  .asyncMap(async ({ idx }) => {
     console.log("    " + idx);
   }, { priority: "INDEX" });
 ```

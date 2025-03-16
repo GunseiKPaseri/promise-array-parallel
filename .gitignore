@@ -221,3 +221,5 @@ $RECYCLE.BIN/
 npm/
 # egg.json
 egg.json
+
+docs/

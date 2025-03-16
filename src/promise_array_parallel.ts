@@ -13,20 +13,28 @@ type PromiseIdxValueArray<T extends readonly unknown[]> = {
   [P in keyof T]: Promise<RejectableIdxValue<T[P]>>;
 };
 
+/**
+ * Options for parallel work execution.
+ * @property {number} maxExecutionSlots - The maximum number of tasks to execute in parallel. Defaults to Infinity.
+ * @property {"COME" | "INDEX"} priority - The priority for task execution. "COME" executes tasks in the order they are completed, while "INDEX" maintains the original index order. Defaults to "COME".
+ * @property {number} executionIntervalMS - The interval (in milliseconds) between the start of each task. Defaults to 0.
+ */
 export type ParallelWorkOptions = {
-  parallelDegMax: number;
+  maxExecutionSlots: number;
   priority: "COME" | "INDEX";
-  workIntervalMS: number;
+  executionIntervalMS: number;
 };
 
 /**
- * promise array object
+ * A utility class for executing asynchronous tasks in parallel.  Provides methods for managing parallel execution, controlling concurrency, and handling errors.
  */
 export class PromiseArray<T extends readonly unknown[]> {
   /**
-   * make resolved Promise object
-   * @param `array` using array
-   * @returns `PromiseArray`
+   * Creates a new PromiseArray instance from an array of values.
+   * @param {T} array - The input array of values.
+   * @returns {PromiseArray<T>} - A new PromiseArray instance.
+   * @example
+   * const arr = PromiseArray.from([1, 2, 3, 4, 5]);
    */
   static from<T extends readonly unknown[]>(array: T): PromiseArray<T> {
     return new PromiseArray<T>(
@@ -35,25 +43,30 @@ export class PromiseArray<T extends readonly unknown[]> {
     );
   }
 
+  #array: PromiseIdxValueArray<T>;
+
   /**
-   * @param `array` promise array
+   * Creates a new PromiseArray instance.
+   * @param {PromiseIdxValueArray<T>} array - An array of promises, each resolving to an object containing the index and value of the original array element.
    */
   constructor(array: PromiseIdxValueArray<T>) {
     this.#array = array;
   }
 
-  #array: PromiseIdxValueArray<T>;
-
   /**
-   * `Promise[]` raw object
+   * Returns the underlying array of promises.
+   * @returns {PromiseIdxValueArray<T>} - The array of promises.
    */
   get raw(): PromiseIdxValueArray<T> {
     return Object.freeze(this.#array);
   }
 
   /**
-   * solve like `Promise.all`
-   * @returns solved array
+   * Executes all promises in the array and returns an array of resolved values.  Rejects if any promise rejects.  Similar to `Promise.all`.
+   * @returns {Promise<T>} - A promise that resolves to an array of resolved values.
+   * @example
+   * const arr = PromiseArray.from([1, 2, 3]);
+   * const result = await arr.all(); // result: [1, 2, 3]
    */
   all(): Promise<T> {
     return Promise.all(this.#array)
@@ -73,11 +86,19 @@ export class PromiseArray<T extends readonly unknown[]> {
   }
 
   /**
-   * solve like `Promise.allSettled`
-   * @returns solved array
+   * Executes all promises in the array and returns an array of PromiseSettledResult objects.  Handles both fulfilled and rejected promises. Similar to `Promise.allSettled`.
+   * @returns {Promise<PromiseSettledResult<T[number]>[]>} - A promise that resolves to an array of PromiseSettledResult objects.
+   * @example
+   * const arr = PromiseArray.from([1, 2, 3]);
+   * const result = await arr.asyncMap(funcitonFoo).allSettled();
+   * // result: [
+   * //   { status: 'fulfilled', value: 1 },
+   * //   { status: 'rejected', reason: 'error' },
+   * //   { status: 'fulfilled', value: 3 }
+   * // ]
    */
   allSettled(): Promise<PromiseSettledResult<T[number]>[]> {
-    return Promise.allSettled(this.#array).then((x) => (
+    return Promise.allSettled(this.#array).then((x) =>
       x.map((y) =>
         y.status === "fulfilled" && !y.value.rejected
           ? {
@@ -86,39 +107,47 @@ export class PromiseArray<T extends readonly unknown[]> {
           }
           : {
             status: "rejected" as const,
-            reason: (y.status === "fulfilled" ? y.value.rejected : y.reason),
+            reason: y.status === "fulfilled" ? y.value.rejected : y.reason,
           }
       )
-    ));
+    );
   }
 
   /**
-   * Execute works in parallel
-   * @param `work` async func
-   * @param `options`
-   * @returns `PromiseArray`
+   * Executes an asynchronous function on each element of the array in parallel, with a configurable maximum number of concurrent executions.
+   * @param {<V extends T[number]>(idxval: IdxValue<V>) => Promise<U>} work - The asynchronous function to execute on each element.  Receives an object with the index and value of the element.
+   * @param {Partial<ParallelWorkOptions>} [options] - Options for parallel work execution.
+   * @returns {PromiseArray<U[]>} - A new PromiseArray instance containing the results of the asynchronous function.
+   * @example
+   * const arr = PromiseArray.from([1, 2, 3, 4, 5]);
+   * const doubled = await arr.asyncMap(async (item) => item * 2); // doubled: [2, 4, 6, 8, 10]
    */
-  parallelWork<U>(
+  asyncMap<U>(
     work: <V extends T[number]>(idxval: IdxValue<V>) => Promise<U>,
     options?: Partial<ParallelWorkOptions>,
   ): PromiseArray<U[]> {
-    // initialize
-    const { parallelDegMax = Infinity, priority = "COME", workIntervalMS = 0 } =
-      options ?? {};
+    // Initialize options
+    const {
+      maxExecutionSlots = Infinity,
+      priority = "COME",
+      executionIntervalMS = 0,
+    } = options ?? {};
 
-    const chunkSize = Math.max(Math.min(parallelDegMax, this.#array.length), 1);
+    const chunkSize = Math.max(
+      Math.min(maxExecutionSlots, this.#array.length),
+      1,
+    );
 
     const iter = priority === "COME" ? this.fcfs() : this.fifs();
 
-    // 処理開始を待つタスク
+    // 処理開始を待つタスクキュー
     const waitingTaskQueue: RejectableIdxValue<T[number]>[] = [];
-    // 並列実行中の処理についてのユニークキー・利用可能になるまでのpromise
-    let workspace: [symbol, Promise<void>][] = [];
+    // スロットに紐づく実行中タスクのユニークキーと、スロットが利用可能になるのを待機するPromise
+    let slots: [symbol, Promise<void>][] = [];
 
-    // ユニークキーを削除
-    const releaceWorkspaceUnique = (uniqueKey: symbol) => {
-      workspace = workspace.filter((key) => key[0] !== uniqueKey);
-      //待機中の処理を実行
+    // スロットを解放する（タスク終了時に実行）
+    const releaseSlotUnique = (uniqueKey: symbol) => {
+      slots = slots.filter((key) => key[0] !== uniqueKey);
       tryNextTask();
     };
 
@@ -126,21 +155,21 @@ export class PromiseArray<T extends readonly unknown[]> {
       RejectableIdxValue<U>
     >(this.#array.length);
 
-    let nextUsable = Promise.resolve();
-    // 実行できるならworkを実行
+    let nextSlotRelease = Promise.resolve();
+    // 実行可能な状態だったら次のタスクを実行する
     const tryNextTask = () => {
-      if (workspace.length >= chunkSize) return;
+      if (slots.length >= chunkSize) return;
       const nextTask = waitingTaskQueue.shift();
       if (!nextTask) return;
-      // ユニークキーを発行、登録
-      const workspaceKey = Symbol();
-      const usable = nextUsable;
-      workspace.push([workspaceKey, usable]);
-      nextUsable = nextUsable.then(() => sleep(workIntervalMS));
+      // タスクにユニークキーを発行して、スロットに実行中のタスクとして登録
+      const slotKey = Symbol();
+      const slotRelease = nextSlotRelease;
+      slots.push([slotKey, slotRelease]);
+      nextSlotRelease = nextSlotRelease.then(() => sleep(executionIntervalMS));
 
       const wrappedWork = async (): Promise<RejectableIdxValue<U>> => {
         if (nextTask.rejected) return nextTask;
-        await usable;
+        await slotRelease;
         try {
           return {
             idx: nextTask.idx,
@@ -152,14 +181,14 @@ export class PromiseArray<T extends readonly unknown[]> {
         }
       };
       wrappedWork().then((result) => {
-        // タスクが完了したらユニークキー登録を解除
-        releaceWorkspaceUnique(workspaceKey);
-        // 結果を通知
+        // タスクが終了したらスロットを解放
+        releaseSlotUnique(slotKey);
+        // 結果の通知
         resolveList[nextTask.idx](result);
       });
     };
 
-    // 順次並列処理に投げる
+    // タスクのイテレータを回して順次並列処理に投げる
     (async () => {
       for await (const nextTarget of iter) {
         waitingTaskQueue.push(nextTarget);
@@ -171,14 +200,14 @@ export class PromiseArray<T extends readonly unknown[]> {
   }
 
   /**
-   * First-Come-First-Served
+   * First-Come-First-Served iterator for processing tasks.
+   * @returns {AsyncGenerator<RejectableIdxValue<T[number]>, void, void>} - An asynchronous generator that yields tasks in the order they are completed.
    */
   async *fcfs(): AsyncGenerator<RejectableIdxValue<T[number]>, void, void> {
     const { resolveList, promiseList: fcfslize } = generatePromiseResolveList<
       RejectableIdxValue<T[number]>
     >(this.#array.length);
 
-    // fcfs resolve
     let i = 0;
     this.#array.map((x) =>
       x.then((v) => {
@@ -191,14 +220,14 @@ export class PromiseArray<T extends readonly unknown[]> {
   }
 
   /**
-   * First-Index-First-Served
+   * First-Index-First-Served iterator for processing tasks.
+   * @returns {AsyncGenerator<RejectableIdxValue<T[number]>, void, void>} - An asynchronous generator that yields tasks in their original index order.
    */
   async *fifs(): AsyncGenerator<RejectableIdxValue<T[number]>, void, void> {
     const { resolveList, promiseList: fifslize } = generatePromiseResolveList<
       RejectableIdxValue<T[number]>
     >(this.#array.length);
 
-    // fifs resolve
     this.#array.map((x) =>
       x.then((v) => {
         resolveList[v.idx](v);
